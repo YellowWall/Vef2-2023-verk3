@@ -1,0 +1,24 @@
+
+CREATE TABLE public.deildir(
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(64) NOT NULL UNIQUE,
+  slug VARCHAR(64) NOT NULL UNIQUE,
+  description TEXT,
+  created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+create Type smester as ENUM ('Vor','Sumar','Haust','Heilsárs');
+CREATE TABLE public.afangar(
+  id SERIAL PRIMARY KEY,
+  deild INTEGER,
+  namsnum varchar(16) NOT NULL UNIQUE,
+  title VARCHAR(64) NOT NULL UNIQUE,
+  slug VARCHAR(64) NOT NULL UNIQUE,
+  einingar INTEGER,
+  kennslumisseri smester NOT NULL,
+  namsstig varchar(64) NOT NULL,
+  url varchar(256) DEFAULT NULL,
+  created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT deild FOREIGN key (deild) REFERENCES deildir(id)
+);

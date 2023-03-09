@@ -1,0 +1,135 @@
+import { readFile } from 'fs/promises';
+import {Deild} from './Deildir';
+import { Afangi, afangiMapper } from './Afangar';
+import dotenv from 'dotenv';
+import pg ,{ QueryResult }  from 'pg';
+
+const SCHEMA_FILE = './sql/schema.sql';
+const DROP_SCHEMA_FILE = './sql/drop.sql';
+dotenv.config({ path: './.env.test' });
+
+
+const { DATABASE_URL: connectionString} =
+  process.env;
+
+if (!connectionString) {
+  console.error('vantar DATABASE_URL í .env');
+  process.exit(-1);
+}
+
+
+const pool = new pg.Pool({ connectionString });
+
+pool.on('error', (err: Error) => {
+  console.error('Villa í tengingu við gagnagrunn, forrit hættir', err);
+  process.exit(-1);
+});
+type QueryInput = string|number|null;
+export async function query(q: string, values: Array<QueryInput>) {
+  let client;
+  try {
+    client = await pool.connect();
+  } catch (e) {
+    console.error('unable to get client from pool', e);
+    return null;
+  }
+
+  try {
+    const result = await client.query(q, values);
+    return result;
+  } catch (e) {
+    /*
+    if (nodeEnv !== 'test') {
+      console.error('unable to query', e);
+    }*/
+    return null;
+  } finally {
+    client.release();
+  }
+}
+export async function createSchema(schemaFile = SCHEMA_FILE) {
+  const data = await readFile(schemaFile);
+
+  return query(data.toString('utf-8'),[]);
+}
+
+export async function dropSchema(dropFile = DROP_SCHEMA_FILE) {
+  const data = await readFile(dropFile);
+
+  return query(data.toString('utf-8'),[]);
+}
+export async function insertCourse(course: Omit<Afangi,'id'>): Promise<Afangi|null>{
+  const {title,slug, afangnum, einingar,kennslumisseri,namsstig,url,deildId} = course;
+  const result = await query(`insert into afangi
+  (title,slug, afanganum,einingar,kennslumisseri,namsstig,url,deild)
+  values
+      ($1,$2,$3,$4,$5,$6,$7,$8)
+      returning *;`,[title,slug,afangnum,einingar,kennslumisseri,namsstig,url,deildId]);
+  const mapped = afangiMapper(result?.rows[0]);
+  return mapped;
+}
+export async function conditionalUpdate(
+  table:string, id: number, fields: Array<string>,input: Array<string>
+):Promise<QueryResult|null>{
+  if(!table||!id||!fields||!input){
+    return null;
+  }
+  const updates = fields.join(',');
+  const vals = input.join(','); 
+  const q = `update in ${table}
+    set (${updates}) values
+    (${vals}) where id = ${id}; `;
+  const result = await query(q,[]);
+  return result;
+}
+export async function conditionalDelete(id:number,table:string,key:number|null):Promise<QueryResult|null>{
+  if(!id||!table){
+    return null;
+  }
+    const result = await query(`
+    DELETE in ${table} where id = ${id}; `,[]);
+    return result;
+}
+export async function deleteBySlug(table:string,slug:string):Promise<QueryResult|null>{
+  if(!table||!slug){
+    return null;
+  }
+  if(table==="deildir"){
+    const id = await query(`select id in deildir where slug = ${slug};`,[]);
+    const afangar = await query(`delete in afangar where deildId = ${id};`,[]);
+  }
+  const result = await query(`delete in ${table} where slug = ${slug}`,[]);
+  return result;
+
+}
+export async function insertDeild(deild: Omit<Deild,'id'>):Promise<QueryResult|null>{
+  if(!deild.title||!deild.slug||!deild.description){
+    console.error("vantar title, slug eða description")
+    return null;
+  }
+  const {title,slug,description} = deild;
+  const result = await query(`
+  insert into deildir(title,slug,description)
+  values($1,$2,$3)
+  returning title, slug;`,[title,slug,description]);
+  if(!result){
+    return null;
+  }
+  return result;
+}
+export async function findBySlug(table:string,slug:string):Promise<QueryResult|null>{
+  if(!table||!slug){
+    console.error('missing params');
+    return null;
+  }
+  const result = await query(`Select id from ${table} where slug= $1;`,[slug]);
+  if(!result){
+    console.error('bad result');
+    return null;
+  }
+  return result;
+}
+
+export async function end() {
+  await pool.end();
+}
