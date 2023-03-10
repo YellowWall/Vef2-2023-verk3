@@ -1,8 +1,8 @@
 import { QueryResult } from "pg";
-import {conditionalUpdate, query,findBySlug} from "./db";
+import {conditionalUpdate, query,findBySlug, insertCourse} from "./db";
 
 export type importAfangi = {
-  namsNum: string,
+  namsnum: string,
   title: string,
   slug: string,
   einingar: number,
@@ -11,11 +11,21 @@ export type importAfangi = {
   url: string
 
 }
+type potUpdateAfangi ={
+  id:number,
+  namsnum?: string,
+  title?: string,
+  slug?: string,
+  einingar?: number,
+  kennslumisseri?: string,
+  namsstig?: string,
+  url?: string
+}
 
 export type Afangi = {
     id: number,
-    deildId: number,
-    afangnum: string,
+    deild: number,
+    namsnum: string,
     title: string,
     slug: string,
     einingar: number,
@@ -26,12 +36,12 @@ export type Afangi = {
     updated:Date,};
 
 export function mapDbAfangarToAfangar(    
-    input:QueryResult<Afangi>|null):Array<Afangi>{
+    input:QueryResult|null):Array<Afangi>{
     if (!input) {
+        console.error('bad input')
         return [];
     }
     const mappedEvents = input?.rows.map(afangiMapper);
-
     return mappedEvents.filter((i): i is Afangi=>Boolean(i));
 }
 export function importAfangiToAfangi(input:unknown,deild:number):Omit<Afangi,'id'>|null{
@@ -40,21 +50,22 @@ export function importAfangiToAfangi(input:unknown,deild:number):Omit<Afangi,'id
     ||!potentialAfangi.title
     ||!potentialAfangi.slug
     ||!potentialAfangi.einingar
-    ||!potentialAfangi.namsNum
+    ||!potentialAfangi.namsnum
     ||!potentialAfangi.kennslumisseri
     ||!potentialAfangi.namsstig
     ||!potentialAfangi.url){
+      console.error('importAfanga param vantar')
       return null;
     }
   const afangi: Omit<Afangi,'id'>={
     title: potentialAfangi.title,
     slug: potentialAfangi.slug,
     einingar: potentialAfangi.einingar,
-    afangnum: potentialAfangi.namsNum,
+    namsnum: potentialAfangi.namsnum,
     kennslumisseri:potentialAfangi.kennslumisseri,
     namsstig:potentialAfangi.namsstig,
     url: potentialAfangi.url,
-    deildId: deild,
+    deild: deild,
     created: new Date(),
     updated: new Date(),
   }
@@ -77,13 +88,14 @@ export function afangiMapper(input: unknown): Afangi | null {
         ||!potentialAfangi.title
         ||!potentialAfangi.slug
         ||!potentialAfangi.einingar
-        ||!potentialAfangi.afangnum
+        ||!potentialAfangi.namsnum
         ||!potentialAfangi.kennslumisseri
         ||!potentialAfangi.namsstig
         ||!potentialAfangi.url
-        ||!potentialAfangi.deildId
+        ||!potentialAfangi.deild
         ||!potentialAfangi.created
         ||!potentialAfangi.updated){
+        console.error("missing param for map");
         return null;
     }
     const afangi: Afangi={
@@ -91,37 +103,76 @@ export function afangiMapper(input: unknown): Afangi | null {
         title: potentialAfangi.title,
         slug: potentialAfangi.slug,
         einingar: potentialAfangi.einingar,
-        afangnum: potentialAfangi.afangnum,
+        namsnum: potentialAfangi.namsnum,
         kennslumisseri:potentialAfangi.kennslumisseri,
         namsstig:potentialAfangi.namsstig,
         url: potentialAfangi.url,
-        deildId:potentialAfangi.deildId,
+        deild:potentialAfangi.deild,
         created: new Date(potentialAfangi.created),
         updated: new Date(potentialAfangi.updated),
     };
 
 return afangi;
 }
-async function createAfangi(num: string,title:string,einingar:number,kennslumisseri:string,namsstig:string,url:string, deild:number){
-    if(!num||!title||!einingar||!kennslumisseri||!namsstig||!url||!deild){
-      return null;
-    }
-    const vals = [deild,title,einingar,kennslumisseri,namsstig,url];
-    const q = `
-      INSERT INTO afangar
-        (deild,title,einingar,kennslumisseri,namsstig,url)
-      VALUES
-        ($1,$2,$3,$4,$5,$6)
-      RETURNING
-        title,deild,einingar,kennslumisseri,namsstig,url;
-    `;
-    const result = await query(q,vals);
-    if(!result){
-      return null;
-    }
-    return afangiMapper(result);
+export async function createAfangi(input:unknown,slug:string):Promise<Afangi|null>{
+  const deild = await findBySlug('deildir',slug);
+  if(!deild){
+    console.error("villa við findBySlug")
+    return null;
   }
-  async function patchAfangi(input:Afangi){
+  const event = input as Partial<importAfangi>|null;
+  if(!event){
+    return null
+  }
+  const potential = importAfangiToAfangi(event,deild.rows[0].id);
+  if(!potential){
+    console.error("villa við afangaconversion")
+    return null;
+  }
+  const result = await insertCourse(potential);
+  if(!result){
+    console.error("villa við afangainsertion")
+  }
+  return afangiMapper(result?.rows[0]);
+}
+
+export async function updateAfangi(updates:unknown):Promise<QueryResult|null>{
+  const update = updates as Partial<potUpdateAfangi>|null;
+  if(!update||!update.id){
+    return null;
+  }
+  const keys: Array<string>=[];
+  const vals: Array<string|number> = [];
+  if(update.namsnum){
+    keys.push('namsNum');
+    vals.push(update.namsnum);
+  }if(update.title){
+    keys.push('title');
+    vals.push(update.title);
+  }if(update.slug){
+    keys.push('slug');
+    vals.push(update.slug);
+  }if(update.namsstig){
+    keys.push('namsstig');
+    vals.push(update.namsstig)
+  }if(update.kennslumisseri){
+    keys.push('kennslumisseri');
+    vals.push(update.kennslumisseri)
+  }if(update.url){
+    keys.push('url');
+    vals.push(update.url)
+  }if(update.einingar){
+    keys.push('einingar');
+    vals.push(update.einingar);
+  }if(keys.length===0){
+    return null;
+  }
+  return await conditionalUpdate('afangar',update.id,keys,vals);
+  
+
+
+}
+//  async function patchAfangi(input:Afangi){
     //vill nota conditionalUpdate hérna. Þarf fylki af lyklum sem á að breyta og fylki af nýju gildunum þeirra
     //return conditionalUpdate('afangar',Afangi.id,lyklar,gildi)
     /*
@@ -146,8 +197,8 @@ async function createAfangi(num: string,title:string,einingar:number,kennslumiss
     }
     return result;
     //res.json({title,slug,description});
-  */
   }
+  */
   /*
   async function deleteAfangi(req: Request, res: Response, next: NextFunction){
     const {id} = req.params;

@@ -1,5 +1,5 @@
 import { QueryResult } from "pg";
-import { query } from '../lib/db.js';
+import { insertDeild, query } from '../lib/db';
 
 /*
 {
@@ -22,7 +22,7 @@ export type Deild = {
     created:Date,
     updated:Date};
 
-function mapDbDeildirToDeildir(    
+export function mapDbDeildirToDeildir(    
     input:QueryResult<Deild>|null):Array<Deild>{
     if (!input) {
         return [];
@@ -62,27 +62,15 @@ export function deildMapper(input: unknown): Deild | null {
 
 return deild;
 }
-async function createDeild(title:string,slug:string,description:string):Promise<Deild|null>{
-    if(!title||!slug||!description){
-      return null;
-    }
-    const vals = [title,slug,description];
-    const q = `
-      INSERT INTO deildir
-        (title,slug,description)
-      VALUES
-        ($1,$2,$3)
-      RETURNING
-        id,title,slug,description,created,updated;
-    `;
-    const result = await query(q,vals);
+export async function createDeild(input:Omit<Deild,'id'>):Promise<Deild|null>{
+    const result = await insertDeild(input);
     if(!result){
       return null;
     }
-    
     return deildMapper(result);
   }
-  async function updateDeild(input:number,data:Deild):Promise<Deild|null>{
+
+async function updateDeild(input:number,data:Deild):Promise<Deild|null>{
     const id = input;
     const {title,slug,description} = data as Deild;
     const q =`

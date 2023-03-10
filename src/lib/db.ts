@@ -58,18 +58,17 @@ export async function dropSchema(dropFile = DROP_SCHEMA_FILE) {
 
   return query(data.toString('utf-8'),[]);
 }
-export async function insertCourse(course: Omit<Afangi,'id'>): Promise<Afangi|null>{
-  const {title,slug, afangnum, einingar,kennslumisseri,namsstig,url,deildId} = course;
-  const result = await query(`insert into afangi
-  (title,slug, afanganum,einingar,kennslumisseri,namsstig,url,deild)
-  values
+export async function insertCourse(course: Omit<Afangi,'id'>): Promise<QueryResult|null>{
+  const {title,slug, namsnum, einingar,kennslumisseri,namsstig,url,deild} = course;
+  const result = await query(`insert into afangar
+  (title,slug,namsnum,einingar,kennslumisseri,namsstig,url,deild)
+      values
       ($1,$2,$3,$4,$5,$6,$7,$8)
-      returning *;`,[title,slug,afangnum,einingar,kennslumisseri,namsstig,url,deildId]);
-  const mapped = afangiMapper(result?.rows[0]);
-  return mapped;
+      returning *;`,[title,slug,namsnum,einingar,kennslumisseri,namsstig,url,deild]);
+  return result;
 }
 export async function conditionalUpdate(
-  table:string, id: number, fields: Array<string>,input: Array<string>
+  table:string, id: number, fields: Array<string>,input: Array<string|number>
 ):Promise<QueryResult|null>{
   if(!table||!id||!fields||!input){
     return null;
@@ -78,27 +77,35 @@ export async function conditionalUpdate(
   const vals = input.join(','); 
   const q = `update in ${table}
     set (${updates}) values
-    (${vals}) where id = ${id}; `;
-  const result = await query(q,[]);
+    (${vals}) where id = $1; `;
+  const result = await query(q,[id]);
   return result;
 }
-export async function conditionalDelete(id:number,table:string,key:number|null):Promise<QueryResult|null>{
+export async function conditionalDelete(id:number,table:string):Promise<QueryResult|null>{
   if(!id||!table){
     return null;
   }
     const result = await query(`
-    DELETE in ${table} where id = ${id}; `,[]);
+    DELETE in ${table} where id = $1 returning 1; `,[id]);
     return result;
 }
 export async function deleteBySlug(table:string,slug:string):Promise<QueryResult|null>{
   if(!table||!slug){
     return null;
   }
-  if(table==="deildir"){
-    const id = await query(`select id in deildir where slug = ${slug};`,[]);
-    const afangar = await query(`delete in afangar where deildId = ${id};`,[]);
+  if(table==='deildir'){
+    const key = await findBySlug('deildir',slug);
+    if(!key){
+      console.error('deild finnst ekki');
+      return null;
+    }
+    const afangar = await query(`delete from afangar where deild = $1;`,[key.rows[0].id]);
   }
-  const result = await query(`delete in ${table} where slug = ${slug}`,[]);
+  const result = await query(`delete from ${table} where slug = $1 returning 1;`,[slug]);
+  console.error(result);
+  if(!result){
+    return null;
+  }
   return result;
 
 }

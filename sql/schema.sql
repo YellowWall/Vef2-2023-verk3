@@ -10,7 +10,7 @@ CREATE TABLE public.deildir(
 create Type smester as ENUM ('Vor','Sumar','Haust','Heilsárs');
 CREATE TABLE public.afangar(
   id SERIAL PRIMARY KEY,
-  deild INTEGER,
+  deild INTEGER NOT NULL,
   namsnum varchar(16) NOT NULL UNIQUE,
   title VARCHAR(64) NOT NULL UNIQUE,
   slug VARCHAR(64) NOT NULL UNIQUE,

@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
 import dotenv from 'dotenv';
 import {importDeild, Deild} from '../lib/Deildir';
-import { importAfangi,Afangi,importAfangiToAfangi } from '../lib/Afangar';
+import { importAfangi,Afangi,importAfangiToAfangi,updateAfangi } from '../lib/Afangar';
 import {
   createSchema,
   dropSchema,
@@ -59,7 +59,7 @@ describe('db', () => {
   });
   it('Add afangi to deild', async ()=> {
     const testAfangi: importAfangi={
-        namsNum: 'tes123g',
+        namsnum: 'tes123g',
         title: 'prufa',
         slug: 'prufa',
         einingar: 4,
@@ -74,11 +74,74 @@ describe('db', () => {
         if(data!==null){
         const result = await insertCourse(data);
             if(result!==null){
-                expect(result.title).toBe('prufa');
+                expect(result.rows[0].title).toBe('prufa');
             }
         }
     }
   });
+  it('delete afanga úr áfangatöflu', async () => {
+    const id = await findBySlug('afangar','prufa');
+    expect(id).not.toBeNull();
+    if(id!==null){
+      const result = await deleteBySlug('afangar','prufa');
+      expect(result).not.toBeNull();
+    }
+  });
+  it('eyðum deild og öllum áföngum hennar', async ()=> {
+    const testAfangi: importAfangi={
+        namsnum: 'tes123g',
+        title: 'prufa',
+        slug: 'prufa',
+        einingar: 4,
+        kennslumisseri: 'Vor',
+        namsstig: 'grunnám',
+        url:''
+    };
+    const id = await findBySlug('deildir','test')
+    expect(id).not.toBeNull();
+    if(id!==null){
+        const data = importAfangiToAfangi(testAfangi,id.rows[0].id);
+        if(data!==null){
+        const result = await insertCourse(data);
+            if(result!==null){
+                expect(result.rows[0].title).toBe('prufa');
+                const del = await deleteBySlug('deildir','test');
+                if(del!==null){
+                  const find = await findBySlug('deildir','test');
+                  const find2 = await findBySlug('afangar','prufa');
+                  expect(find && find2).toBeNull();
+                }
+            }
+        }
+    }
+  });
+  it('Add afangi to deild', async ()=> {
+    const testAfangi: importAfangi={
+        namsnum: 'tes123g',
+        title: 'prufa',
+        slug: 'prufa',
+        einingar: 4,
+        kennslumisseri: 'Vor',
+        namsstig: 'grunnám',
+        url:''
+    };
+    const id = await findBySlug('deildir','test')
+    expect(id).not.toBeNull();
+    if(id!==null){
+        const data = importAfangiToAfangi(testAfangi,id.rows[0].id);
+        if(data!==null){
+        const result = await insertCourse(data);
+            if(result!==null){
+                expect(result.rows[0].title).toBe('prufa');
+            }
+        }
+    }
+  });
+  /*
+  it('update ákveðan hluti í áfanga', async () => {
+    const id = findBySlug('afangar','prufa');
+    const result = updateAfangi(id,{url:'idiot.com'})
+  })*/
 });
 /*
   const user = {username:'D',name:'Gunna' }

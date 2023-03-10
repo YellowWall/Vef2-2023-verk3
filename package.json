@@ -7,7 +7,7 @@
     "dev": "dotenv -e .env -- nodemon",
     "dev2": "nodemon ./src/app.ts",
     "start": "node --loader ts-node/esm ./src/app.ts",
-    "setup": "dotenv -e .env node --loader ts-node/esm ./src/ddsetup.ts",
+    "setup": "dotenv -e .env node --loader ts-node/esm ./src/setup.ts",
     "conf":"ts-jest config:init",
     "test": "NODE_ENV=test NODE_OPTIONS='--experimental-vm-modules' dotenv -e .env.test -- jest ./*.test.ts"
   },
