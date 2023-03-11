@@ -1,15 +1,14 @@
 import { QueryResult } from "pg";
-import {conditionalUpdate, query,findBySlug, insertCourse} from "./db";
+import slugify from "slugify";
+import {conditionalUpdate, query,findBySlug, insertCourse} from "./db.js";
 
 export type importAfangi = {
   namsnum: string,
   title: string,
-  slug: string,
   einingar: number,
   kennslumisseri: string,
   namsstig: string,
   url: string
-
 }
 type potUpdateAfangi ={
   id:number,
@@ -48,7 +47,6 @@ export function importAfangiToAfangi(input:unknown,deild:number):Omit<Afangi,'id
   const potentialAfangi = input as Partial<importAfangi> | null;
   if(!potentialAfangi
     ||!potentialAfangi.title
-    ||!potentialAfangi.slug
     ||!potentialAfangi.einingar
     ||!potentialAfangi.namsnum
     ||!potentialAfangi.kennslumisseri
@@ -59,7 +57,7 @@ export function importAfangiToAfangi(input:unknown,deild:number):Omit<Afangi,'id
     }
   const afangi: Omit<Afangi,'id'>={
     title: potentialAfangi.title,
-    slug: potentialAfangi.slug,
+    slug: slugify(potentialAfangi.title).toLowerCase(),
     einingar: potentialAfangi.einingar,
     namsnum: potentialAfangi.namsnum,
     kennslumisseri:potentialAfangi.kennslumisseri,
@@ -117,14 +115,14 @@ return afangi;
 export async function createAfangi(input:unknown,slug:string):Promise<Afangi|null>{
   const deild = await findBySlug('deildir',slug);
   if(!deild){
-    console.error("villa við findBySlug")
+    console.error("deild finnst ekki")
     return null;
   }
   const event = input as Partial<importAfangi>|null;
   if(!event){
     return null
   }
-  const potential = importAfangiToAfangi(event,deild.rows[0].id);
+  const potential = importAfangiToAfangi(event,deild);
   if(!potential){
     console.error("villa við afangaconversion")
     return null;

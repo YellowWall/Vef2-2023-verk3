@@ -1,5 +1,6 @@
+import slugify from 'slugify';
 import { QueryResult } from "pg";
-import { insertDeild, query } from '../lib/db';
+import { insertDeild, query } from '../lib/db.js';
 
 /*
 {
@@ -10,7 +11,6 @@ import { insertDeild, query } from '../lib/db';
 */
 export type importDeild = {
   title:string,
-  slug:string,
   description: string,
   csv: string
 }
@@ -21,7 +21,24 @@ export type Deild = {
     description: string,
     created:Date,
     updated:Date};
-
+export function importDeildToDeild(input: unknown):Omit<Deild,'id'>|null{
+  const potentialDeild = input as Partial<importDeild> | null;
+  if(!potentialDeild
+    ||!potentialDeild.title
+    ||!potentialDeild.description
+    ){
+      console.error('importAfanga param vantar')
+      return null;
+    }
+  const deild: Omit<Deild,'id'>={
+    title: potentialDeild.title,
+    slug: slugify(potentialDeild.title).toLowerCase(),
+    description:potentialDeild.description,
+    created: new Date(),
+    updated: new Date()
+  }
+  return deild
+}
 export function mapDbDeildirToDeildir(    
     input:QueryResult<Deild>|null):Array<Deild>{
     if (!input) {

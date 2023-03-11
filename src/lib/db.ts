@@ -1,24 +1,23 @@
 import { readFile } from 'fs/promises';
-import {Deild} from './Deildir';
-import { Afangi, afangiMapper } from './Afangar';
+import {Deild} from './Deildir.js';
+import { Afangi } from './Afangar.js';
 import dotenv from 'dotenv';
 import pg ,{ QueryResult }  from 'pg';
 
 const SCHEMA_FILE = './sql/schema.sql';
 const DROP_SCHEMA_FILE = './sql/drop.sql';
-dotenv.config({ path: './.env.test' });
+dotenv.config({ path: './.env' });
 
 
-const { DATABASE_URL: connectionString} =
+const { DATABASE_URL: connectionString, NODE_ENV: nodeEnv = 'development' } =
   process.env;
 
 if (!connectionString) {
   console.error('vantar DATABASE_URL í .env');
   process.exit(-1);
 }
-
-
-const pool = new pg.Pool({ connectionString });
+const ssl = {rejectUnauthorized: false}
+const pool = new pg.Pool({ connectionString,ssl})
 
 pool.on('error', (err: Error) => {
   console.error('Villa í tengingu við gagnagrunn, forrit hættir', err);
@@ -55,7 +54,6 @@ export async function createSchema(schemaFile = SCHEMA_FILE) {
 
 export async function dropSchema(dropFile = DROP_SCHEMA_FILE) {
   const data = await readFile(dropFile);
-
   return query(data.toString('utf-8'),[]);
 }
 export async function insertCourse(course: Omit<Afangi,'id'>): Promise<QueryResult|null>{
@@ -73,15 +71,29 @@ export async function conditionalUpdate(
   if(!table||!id||!fields||!input){
     return null;
   }
-  const updates = fields.join(',');
-  const vals = input.join(','); 
-  const q = `update in ${table}
-    set (${updates}) values
-    (${vals}) where id = $1; `;
+  if(fields.length!==input.length){
+    console.error('different number of fields and values')
+    return null
+  }
+  const update: Array<string> = []
+  let i = 0
+  while(i<fields.length){
+    update.push(fields[i]+' = '+input[i])
+    i++
+  }
+  if(update.length==0){
+    return null
+  }
+  const q = `update ${table}
+    set ${update} where id = $1 returning 1; `;
   const result = await query(q,[id]);
+  console.error(result)
+  if(!result||result.rowCount==0){
+    return null
+  }
   return result;
 }
-export async function conditionalDelete(id:number,table:string):Promise<QueryResult|null>{
+export async function deleteById(id:number,table:string):Promise<QueryResult|null>{
   if(!id||!table){
     return null;
   }
@@ -99,10 +111,9 @@ export async function deleteBySlug(table:string,slug:string):Promise<QueryResult
       console.error('deild finnst ekki');
       return null;
     }
-    const afangar = await query(`delete from afangar where deild = $1;`,[key.rows[0].id]);
+    const afangar = await query(`delete from afangar where deild = $1;`,[key]);
   }
   const result = await query(`delete from ${table} where slug = $1 returning 1;`,[slug]);
-  console.error(result);
   if(!result){
     return null;
   }
@@ -124,17 +135,16 @@ export async function insertDeild(deild: Omit<Deild,'id'>):Promise<QueryResult|n
   }
   return result;
 }
-export async function findBySlug(table:string,slug:string):Promise<QueryResult|null>{
+export async function findBySlug(table:string,slug:string):Promise<number|null>{
   if(!table||!slug){
     console.error('missing params');
     return null;
   }
   const result = await query(`Select id from ${table} where slug= $1;`,[slug]);
-  if(!result){
-    console.error('bad result');
+  if(!result||result.rowCount==0){
     return null;
   }
-  return result;
+  return result.rows[0].id;
 }
 
 export async function end() {

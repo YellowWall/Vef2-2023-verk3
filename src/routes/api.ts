@@ -29,7 +29,7 @@ export async function deildarAfangar(req: Request,res: Response,next: NextFuncti
     console.error('deild not found in db')
     return next()
   }
-  const potAfangar = await query('select * FROM afangar where deild = $1',[deild.rows[0].id]);
+  const potAfangar = await query('select * FROM afangar where deild = $1',[deild]);
   const afangar = mapDbAfangarToAfangar(potAfangar);
   if(!afangar){
     return next()
@@ -74,7 +74,6 @@ async function deldeild(req:Request,res:Response,next:NextFunction){
   const {slug} = req.params;
   const result = await deleteBySlug('deildir',slug);
   if(!result){
-
     return next();
   }
   res.json(result);

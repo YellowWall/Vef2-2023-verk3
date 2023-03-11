@@ -7,8 +7,8 @@
     "dev": "dotenv -e .env -- nodemon",
     "dev2": "nodemon ./src/app.ts",
     "start": "node --loader ts-node/esm ./src/app.ts",
-    "setup": "dotenv -e .env node --loader ts-node/esm ./src/setup.ts",
-    "conf":"ts-jest config:init",
+    "setup": "dotenv -e .env -- node --loader ts-node/esm ./src/setup/setup.ts",
+    "conf": "ts-jest config:init",
     "test": "NODE_ENV=test NODE_OPTIONS='--experimental-vm-modules' dotenv -e .env.test -- jest ./*.test.ts"
   },
   "keywords": [],
@@ -35,6 +35,7 @@
     "@typescript-eslint/parser": "^5.54.0",
     "eslint": "^8.35.0",
     "nodemon": "^2.0.20",
+    "slugify": "^1.6.5",
     "ts-jest": "^29.0.5",
     "typescript": "^4.9.5"
   }

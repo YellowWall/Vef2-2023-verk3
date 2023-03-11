@@ -10,7 +10,8 @@ import {
   insertDeild,
   conditionalUpdate,
   deleteBySlug,
-  findBySlug
+  findBySlug,
+  query
 
 } from '../lib/db';
 
@@ -65,20 +66,36 @@ describe('db', () => {
         einingar: 4,
         kennslumisseri: 'Vor',
         namsstig: 'grunnám',
-        url:''
+        url:'test.com'
     };
     const id = await findBySlug('deildir','test')
     expect(id).not.toBeNull();
     if(id!==null){
-        const data = importAfangiToAfangi(testAfangi,id.rows[0].id);
+        const data = importAfangiToAfangi(testAfangi,id);
         if(data!==null){
         const result = await insertCourse(data);
             if(result!==null){
                 expect(result.rows[0].title).toBe('prufa');
             }
+        const find = await findBySlug('afangar','prufa')
+        expect(find).not.toBeNull()
         }
     }
   });
+
+  it('conditional update virkar', async () =>{
+    const id = await findBySlug('afangar','prufa');
+    expect(id).not.toBeNull()
+    if(id!==null){
+      const update = await conditionalUpdate('afangar',id,['einingar'],[1])
+      expect(update).not.toBeNull()
+      const test = await query(`select einingar from afangar where id =$1`,[id])
+      expect(test).not.toBeNull()
+      if(test!==null){
+        expect(test.rows[0].einingar).toBe(1)
+      }
+    }
+  })
   it('delete afanga úr áfangatöflu', async () => {
     const id = await findBySlug('afangar','prufa');
     expect(id).not.toBeNull();
@@ -95,12 +112,12 @@ describe('db', () => {
         einingar: 4,
         kennslumisseri: 'Vor',
         namsstig: 'grunnám',
-        url:''
+        url:'test.com'
     };
     const id = await findBySlug('deildir','test')
     expect(id).not.toBeNull();
     if(id!==null){
-        const data = importAfangiToAfangi(testAfangi,id.rows[0].id);
+        const data = importAfangiToAfangi(testAfangi,id);
         if(data!==null){
         const result = await insertCourse(data);
             if(result!==null){
@@ -111,28 +128,6 @@ describe('db', () => {
                   const find2 = await findBySlug('afangar','prufa');
                   expect(find && find2).toBeNull();
                 }
-            }
-        }
-    }
-  });
-  it('Add afangi to deild', async ()=> {
-    const testAfangi: importAfangi={
-        namsnum: 'tes123g',
-        title: 'prufa',
-        slug: 'prufa',
-        einingar: 4,
-        kennslumisseri: 'Vor',
-        namsstig: 'grunnám',
-        url:''
-    };
-    const id = await findBySlug('deildir','test')
-    expect(id).not.toBeNull();
-    if(id!==null){
-        const data = importAfangiToAfangi(testAfangi,id.rows[0].id);
-        if(data!==null){
-        const result = await insertCourse(data);
-            if(result!==null){
-                expect(result.rows[0].title).toBe('prufa');
             }
         }
     }
