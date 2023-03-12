@@ -2,7 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import { mapDbEventsToEvents, mapDbEventToEvent } from '../lib/Events.js';
 import { findBySlug,deleteBySlug, query } from '../lib/db.js';
 import{Deild,createDeild, mapDbDeildirToDeildir, updateDeild} from '../lib/Deildir.js';
-import { createAfangi, deleteAfangi, mapDbAfangarToAfangar, updateAfangi } from '../lib/Afangar.js';
+import { createAfangi, deleteAfangi, mapDbAfangarToAfangar, mapDbAfangiToAfangi, updateAfangi } from '../lib/Afangar.js';
 
 export const router = express.Router();
 
@@ -102,9 +102,19 @@ async function delAfangi(req:Request,res:Response,next:NextFunction){
   }
   res.json(result)
 }
+async function showAfangi(req:Request,res:Response,next:NextFunction){
+  const {slug,deild} = req.params
+  const deildID = await findBySlug('deildir',deild)
+  const dbAfangi = await query(`select * from afangar where deild=$1 and slug=$2;`,[deildID,slug])
+  const result = mapDbAfangiToAfangi(dbAfangi?.rows[0])
+  if(!result){
+    return next()
+  }
+  res.json(result)
+}
 router.get('/departments',deildaIndex);
 router.get('/departments/:slug',deildarAfangar);
-router.get('/',index)
+router.get('/departments/:deild/:slug',showAfangi)
 router.patch('/departments/:slug',patchDeild);
 router.patch('/departments/:deild/:slug',patchAfangi)
 router.post('/departments/:slug',makeAfangi)

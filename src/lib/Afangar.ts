@@ -143,7 +143,7 @@ export async function updateAfangi(updates:unknown, deild: string,slug:string):P
   if(!id){
     return null
   }
-  const test = await query('select id from afangar where id=$1,deild=$2;',[id,deildId])
+  const test = await query('select id from afangar where id=$1 and deild=$2;',[id,deildId])
   if(!test||test.rowCount==0){
     return null
   }
@@ -189,7 +189,7 @@ export async function deleteAfangi(deild:string,afangi:string){
   if(!deildId||!afangiId){
     return null
   }
-  const test = await query('select id from afangar where id=$1,deild=$2;',[afangiId,deildId])
+  const test = await query('select id from afangar where id=$1 and deild=$2;',[afangiId,deildId])
   if(!test||test.rowCount==0){
     return null
   }
