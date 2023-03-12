@@ -1,25 +1,17 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { mapDbEventsToEvents, mapDbEventToEvent } from '../lib/Events.js';
 import { findBySlug,deleteBySlug, query } from '../lib/db.js';
 import{Deild,createDeild, mapDbDeildirToDeildir, updateDeild} from '../lib/Deildir.js';
 import { createAfangi, deleteAfangi, mapDbAfangarToAfangar, mapDbAfangiToAfangi, updateAfangi } from '../lib/Afangar.js';
 
 export const router = express.Router();
 
-export async function index(req: Request, res: Response, next: NextFunction){
-  const eventResult = await query('SELECT * FROM events;',[]);
-  const events = mapDbEventsToEvents(eventResult);
-  if(!events){
-    return next();
-  }
-  res.json(events);
-}
 export async function deildaIndex(req: Request, res: Response, next: NextFunction){
   const display = await query(`SELECT * FROM deildir;`,[]);
   const displayer = mapDbDeildirToDeildir(display);
   if(!displayer){
     return next()
   }
+  res.status(200)
   res.json(displayer);
 }
 export async function deildarAfangar(req: Request,res: Response,next: NextFunction){
@@ -34,17 +26,10 @@ export async function deildarAfangar(req: Request,res: Response,next: NextFuncti
   if(!afangar){
     return next()
   }
+  res.status(200)
   res.json(afangar)
 }
-export async function event(req: Request, res: Response, next: NextFunction){
-  const {slug} = req.params;
-  const eventResult = await query('SELECT * FROM events WHERE slug = $1;',[slug]);
-  const event = mapDbEventToEvent(eventResult);
-  if (!event){
-    return next();
-  }
-  res.json(event);
-}
+
 async function makeDeild(req: Request, res: Response, next: NextFunction){
   const {title,slug,description} = req.body;
   const insert: Omit<Deild,'id'>={
@@ -58,6 +43,7 @@ async function makeDeild(req: Request, res: Response, next: NextFunction){
   if(!result){
     return next();
   }
+  res.status(200)
   res.json({title,slug,description});
 }
 
@@ -67,6 +53,7 @@ async function makeAfangi(req:Request,res:Response,next:NextFunction){
   if(!result){
     return next();
   }
+  res.status(200)
   res.json(result);
 }
 async function deldeild(req:Request,res:Response,next:NextFunction){
@@ -75,6 +62,7 @@ async function deldeild(req:Request,res:Response,next:NextFunction){
   if(!result){
     return next();
   }
+  res.status(200)
   res.json(result);
 }
 async function patchDeild(req:Request,res:Response,next:NextFunction){
@@ -83,14 +71,22 @@ async function patchDeild(req:Request,res:Response,next:NextFunction){
   if(!result){
     return next();
   }
+  res.status(200)
   res.json(result);
 }
 async function patchAfangi(req:Request,res:Response,next:NextFunction){
   const {slug,deild} = req.params
+  const id = await findBySlug(`deildir`,deild)
+  const exists = await query(`select * from afangar where slug=$1 and deild =$2; `,[slug,id])
+  if(!exists){
+    res.status(400)
+    return next()
+  }
   const result = await updateAfangi(req.body,deild,slug)
   if(!result){
     return next();
   }
+  res.status(200)
   res.json(result)
 }
 async function delAfangi(req:Request,res:Response,next:NextFunction){
@@ -99,6 +95,7 @@ async function delAfangi(req:Request,res:Response,next:NextFunction){
   if(!result){
     return next()
   }
+  res.status(200)
   res.json(result)
 }
 async function showAfangi(req:Request,res:Response,next:NextFunction){
@@ -107,8 +104,10 @@ async function showAfangi(req:Request,res:Response,next:NextFunction){
   const dbAfangi = await query(`select * from afangar where deild=$1 and slug=$2;`,[deildID,slug])
   const result = mapDbAfangiToAfangi(dbAfangi?.rows[0])
   if(!result){
+    res.status(404)
     return next()
   }
+  res.status(200)
   res.json(result)
 }
 router.get('/departments',deildaIndex);
