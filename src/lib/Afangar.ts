@@ -1,6 +1,7 @@
 import { QueryResult } from "pg";
 import slugify from "slugify";
-import {conditionalUpdate, query,findBySlug, insertCourse} from "./db.js";
+import { isNullishCoalesce } from "typescript";
+import {conditionalUpdate,deleteById,findBySlug, insertCourse, query} from "./db.js";
 
 export type importAfangi = {
   namsnum: string,
@@ -11,7 +12,6 @@ export type importAfangi = {
   url: string
 }
 type potUpdateAfangi ={
-  id:number,
   namsnum?: string,
   title?: string,
   slug?: string,
@@ -72,7 +72,7 @@ export function importAfangiToAfangi(input:unknown,deild:number):Omit<Afangi,'id
 
 }
 
-export function mapDbAfangitoAfangi(input:QueryResult<Afangi>|null):Afangi|null{    
+export function mapDbAfangiToAfangi(input:QueryResult<Afangi>|null):Afangi|null{    
     if (!input){
     return null;
 }
@@ -134,9 +134,21 @@ export async function createAfangi(input:unknown,slug:string):Promise<Afangi|nul
   return afangiMapper(result?.rows[0]);
 }
 
-export async function updateAfangi(updates:unknown):Promise<QueryResult|null>{
+export async function updateAfangi(updates:unknown, deild: string,slug:string):Promise<Afangi|null>{
+  const deildId = await findBySlug('deildir',deild)
+  if(!deildId){
+    return null
+  }
+  const id = await findBySlug('afangar',slug)
+  if(!id){
+    return null
+  }
+  const test = await query('select id from afangar where id=$1,deild=$2;',[id,deildId])
+  if(!test||test.rowCount==0){
+    return null
+  }
   const update = updates as Partial<potUpdateAfangi>|null;
-  if(!update||!update.id){
+  if(!update){
     return null;
   }
   const keys: Array<string>=[];
@@ -149,7 +161,7 @@ export async function updateAfangi(updates:unknown):Promise<QueryResult|null>{
     vals.push(update.title);
   }if(update.slug){
     keys.push('slug');
-    vals.push(update.slug);
+    vals.push(slugify(update.slug).toLowerCase());
   }if(update.namsstig){
     keys.push('namsstig');
     vals.push(update.namsstig)
@@ -165,50 +177,25 @@ export async function updateAfangi(updates:unknown):Promise<QueryResult|null>{
   }if(keys.length===0){
     return null;
   }
-  return await conditionalUpdate('afangar',update.id,keys,vals);
-  
-
-
-}
-//  async function patchAfangi(input:Afangi){
-    //vill nota conditionalUpdate hérna. Þarf fylki af lyklum sem á að breyta og fylki af nýju gildunum þeirra
-    //return conditionalUpdate('afangar',Afangi.id,lyklar,gildi)
-    /*
-    const {id} = input;
-    const {title,slug,} = input;
-    const q =`
-      UPDATE afangar
-        SET
-          name = $1,
-          slug = $2,
-           = $3,
-          updated = CURRENT_TIMESTAMP
-        WHERE
-          id = $4
-        RETURNING id, title, slug, description,created,updated;
-          `;
-    const vals = [title,slug,description,id];
-    const result = await query(q,vals);
-    if(!result){
-      return null; 
-      //next();
-    }
-    return result;
-    //res.json({title,slug,description});
+  const result = await conditionalUpdate('afangar',id,keys,vals);
+  if(!result){
+    return null
   }
-  */
-  /*
-  async function deleteAfangi(req: Request, res: Response, next: NextFunction){
-    const {id} = req.params;
-    const q = `
-      DELETE FROM afangar
-      WHERE 
-        id = $1
-      RETURNING 1;`;
-    const result = await query(q,[id]);
-    if(!result){
-      return next();
-    }
-    res.json({});
-  
-  }*/
+  return afangiMapper(result.rows[0]);
+}
+export async function deleteAfangi(deild:string,afangi:string){
+  const deildId = await findBySlug('deildir',deild)
+  const afangiId = await findBySlug('afangar',afangi)
+  if(!deildId||!afangiId){
+    return null
+  }
+  const test = await query('select id from afangar where id=$1,deild=$2;',[afangiId,deildId])
+  if(!test||test.rowCount==0){
+    return null
+  }
+  const result = await deleteById(afangiId,'afangar')
+  if(!result){
+    return null
+  }
+  return result
+}

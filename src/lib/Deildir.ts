@@ -1,6 +1,6 @@
 import slugify from 'slugify';
 import { QueryResult } from "pg";
-import { insertDeild, query } from '../lib/db.js';
+import { conditionalUpdate, findBySlug, insertDeild, query } from '../lib/db.js';
 
 /*
 {
@@ -13,6 +13,11 @@ export type importDeild = {
   title:string,
   description: string,
   csv: string
+}
+type updateDeild = {
+  title?:string,
+  description?:string,
+  slug?: string
 }
 export type Deild = {
     id: number,
@@ -87,43 +92,33 @@ export async function createDeild(input:Omit<Deild,'id'>):Promise<Deild|null>{
     return deildMapper(result);
   }
 
-async function updateDeild(input:number,data:Deild):Promise<Deild|null>{
-    const id = input;
-    const {title,slug,description} = data as Deild;
-    const q =`
-      UPDATE deildir
-        SET
-          name = $1,
-          slug = $2,
-          description = $3,
-          updated = CURRENT_TIMESTAMP
-        WHERE
-          id = $4
-        RETURNING id, title, slug, description,created,updated;
-          `;
-    const vals = [title,slug,description,id];
-    const result = await query(q,vals);
-    if(!result){
-      return null;
-    }
-    return deildMapper(result);
-  
-  }
-  
-async function deleteDeild(input:number):Promise<number|null>{
-    const id = input as Partial<number> | null;
+export async function updateDeild(input:string,data:unknown):Promise<Deild|null>{
+    const id = await findBySlug('deild',input)
     if(!id){
-      return null;
+      return null
     }
-    const q = `
-      DELETE FROM deildir
-      WHERE 
-        id = $1
-      RETURNING 1;`;
-    const result = await query(q,[id]);
+    const potentialDeild = data as Partial<updateDeild>|null;
+    if(!potentialDeild){
+      return null
+    }
+    const updates: Array<string> = []
+    const values: Array<string> = []
+    if(potentialDeild.title){
+      updates.push('title')
+      values.push(potentialDeild.title)
+    }
+    if(potentialDeild.description){
+      updates.push('description')
+      values.push(potentialDeild.description)
+    }
+    if(potentialDeild.slug){
+      updates.push('slug')
+      values.push(slugify(potentialDeild.slug).toLowerCase())
+    }
+    const result = await conditionalUpdate('deildir',id,updates,values)
     if(!result){
       return null;
     }
-    return 1;
+    return deildMapper(result.rows[0]);
   
   }

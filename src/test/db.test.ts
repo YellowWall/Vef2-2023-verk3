@@ -62,7 +62,6 @@ describe('db', () => {
     const testAfangi: importAfangi={
         namsnum: 'tes123g',
         title: 'prufa',
-        slug: 'prufa',
         einingar: 4,
         kennslumisseri: 'Vor',
         namsstig: 'grunnám',
@@ -108,7 +107,6 @@ describe('db', () => {
     const testAfangi: importAfangi={
         namsnum: 'tes123g',
         title: 'prufa',
-        slug: 'prufa',
         einingar: 4,
         kennslumisseri: 'Vor',
         namsstig: 'grunnám',

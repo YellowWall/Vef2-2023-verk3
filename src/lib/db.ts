@@ -84,8 +84,9 @@ export async function conditionalUpdate(
   if(update.length==0){
     return null
   }
+  const updates = update.join(',')
   const q = `update ${table}
-    set ${update} where id = $1 returning 1; `;
+    set ${updates},updated= ${new Date()} where id = $1 returning *; `;
   const result = await query(q,[id]);
   console.error(result)
   if(!result||result.rowCount==0){
@@ -93,13 +94,16 @@ export async function conditionalUpdate(
   }
   return result;
 }
-export async function deleteById(id:number,table:string):Promise<QueryResult|null>{
+export async function deleteById(id:number,table:string):Promise<number|null>{
   if(!id||!table){
     return null;
   }
-    const result = await query(`
+  if(table==='deildir'){
+    await query(`DELETE in afangar where deild=$1;`,[id])
+  }
+  const result = await query(`
     DELETE in ${table} where id = $1 returning 1; `,[id]);
-    return result;
+  return 1;
 }
 export async function deleteBySlug(table:string,slug:string):Promise<QueryResult|null>{
   if(!table||!slug){
@@ -111,7 +115,7 @@ export async function deleteBySlug(table:string,slug:string):Promise<QueryResult
       console.error('deild finnst ekki');
       return null;
     }
-    const afangar = await query(`delete from afangar where deild = $1;`,[key]);
+    await query(`delete from afangar where deild = $1;`,[key]);
   }
   const result = await query(`delete from ${table} where slug = $1 returning 1;`,[slug]);
   if(!result){

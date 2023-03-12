@@ -1,8 +1,8 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { mapDbEventsToEvents, mapDbEventToEvent } from '../lib/Events.js';
 import { findBySlug,deleteBySlug, query } from '../lib/db.js';
-import{Deild,createDeild, mapDbDeildirToDeildir} from '../lib/Deildir.js';
-import { createAfangi, mapDbAfangarToAfangar } from '../lib/Afangar.js';
+import{Deild,createDeild, mapDbDeildirToDeildir, updateDeild} from '../lib/Deildir.js';
+import { createAfangi, deleteAfangi, mapDbAfangarToAfangar, updateAfangi } from '../lib/Afangar.js';
 
 export const router = express.Router();
 
@@ -78,51 +78,39 @@ async function deldeild(req:Request,res:Response,next:NextFunction){
   }
   res.json(result);
 }
-async function patchEvent(req: Request, res: Response, next: NextFunction){
-  const {id} = req.params;
-  const {name,slug,description} = req.body;
-  const q =`
-    UPDATE events
-      SET
-        name = $1,
-        slug = $2,
-        description = $3,
-        updated = CURRENT_TIMESTAMP
-      WHERE
-        id = $4
-      RETURNING id, name, slug, description;
-        `;
-  const vals = [name,slug,description,id];
-  const result = await query(q,vals);
+async function patchDeild(req:Request,res:Response,next:NextFunction){
+  const {slug} = req.params;
+  const result = await updateDeild(slug,req.body)
   if(!result){
     return next();
   }
-  res.json({name,slug,description});
-
+  res.json(result);
 }
-
-async function deleteEvent(req: Request, res: Response, next: NextFunction){
-  const {id} = req.params;
-  const q = `
-    DELETE FROM events
-    WHERE 
-      id = $1
-    RETURNING 1;`;
-  const result = await query(q,[id]);
+async function patchAfangi(req:Request,res:Response,next:NextFunction){
+  const {slug,deild} = req.params
+  const result = await updateAfangi(req.body,deild,slug)
   if(!result){
     return next();
   }
-  res.json({});
-
+  res.json(result)
+}
+async function delAfangi(req:Request,res:Response,next:NextFunction){
+  const {slug,deild} = req.params
+  const result = await deleteAfangi(deild,slug)
+  if(!result){
+    return next()
+  }
+  res.json(result)
 }
 router.get('/departments',deildaIndex);
 router.get('/departments/:slug',deildarAfangar);
-router.get('/:slug',event);
 router.get('/',index)
-router.patch('/:slug',patchEvent);
+router.patch('/departments/:slug',patchDeild);
+router.patch('/departments/:deild/:slug',patchAfangi)
 router.post('/departments/:slug',makeAfangi)
 router.post('/departments/',makeDeild)
 router.delete('/departments/:slug',deldeild);
+router.delete('/department/:deild/:slug',delAfangi)
 
 /*
 - `GET /departments` skilar lista af deildum:
