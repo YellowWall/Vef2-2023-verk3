@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
 import dotenv from 'dotenv';
-import {importDeild, Deild} from '../lib/Deildir';
-import { importAfangi,Afangi,importAfangiToAfangi,updateAfangi } from '../lib/Afangar';
+import {Deild} from '../lib/Deildir';
+import { importAfangi,importAfangiToAfangi, } from '../lib/Afangar';
 import {
   createSchema,
   dropSchema,

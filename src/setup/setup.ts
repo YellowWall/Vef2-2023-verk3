@@ -4,7 +4,7 @@ import {readFile } from 'fs/promises';
 import path,{join} from 'path';
 import { createSchema, dropSchema, end, insertCourse,insertDeild, findBySlug, query as dbquery } from '../lib/db.js';
 import { parseJson,parseCSV,readFilesFromDir } from './parse.js';
-import { query } from 'express';
+
 const data = './data'
  
 async function create() {

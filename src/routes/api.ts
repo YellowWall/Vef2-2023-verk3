@@ -45,7 +45,6 @@ export async function event(req: Request, res: Response, next: NextFunction){
   }
   res.json(event);
 }
-//functional
 async function makeDeild(req: Request, res: Response, next: NextFunction){
   const {title,slug,description} = req.body;
   const insert: Omit<Deild,'id'>={
@@ -61,7 +60,7 @@ async function makeDeild(req: Request, res: Response, next: NextFunction){
   }
   res.json({title,slug,description});
 }
-//functional
+
 async function makeAfangi(req:Request,res:Response,next:NextFunction){
   const {slug} = req.params;
   const result = await createAfangi(req.body,slug);

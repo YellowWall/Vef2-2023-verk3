@@ -1,6 +1,6 @@
 import slugify from 'slugify';
 import { QueryResult } from "pg";
-import { conditionalUpdate, findBySlug, insertDeild, query } from '../lib/db.js';
+import { conditionalUpdate, findBySlug, insertDeild } from '../lib/db.js';
 /*
 {
     "title": "Hagfræðideild",
@@ -53,14 +53,14 @@ export function mapDbDeildirToDeildir(
 
     return mappedDeildir.filter((i): i is Deild=>Boolean(i));
 }
-
+/*
 function mapDbDeildToDeild(input:QueryResult<Deild>|null):Deild|null{    
     if (!input){
     return null;
 }
 
 return deildMapper(input);
-}
+}*/
 export function deildMapper(input: unknown): Deild | null {
     const potentialDeild = input as Partial<Deild> | null
     if(!potentialDeild

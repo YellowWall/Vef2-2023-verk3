@@ -9,7 +9,7 @@ const DROP_SCHEMA_FILE = './sql/drop.sql';
 dotenv.config({ path: './.env' });
 
 
-const { DATABASE_URL: connectionString, NODE_ENV: nodeEnv = 'development' } =
+const { DATABASE_URL: connectionString} =
   process.env;
 
 if (!connectionString) {
@@ -103,6 +103,9 @@ export async function deleteById(id:number,table:string):Promise<number|null>{
   }
   const result = await query(`
     DELETE in ${table} where id = $1 returning 1; `,[id]);
+  if(!result){
+    return null
+  }
   return 1;
 }
 export async function deleteBySlug(table:string,slug:string):Promise<QueryResult|null>{

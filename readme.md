@@ -1,3 +1,45 @@
+# verkefniskröfur kláraðar:
+### vefþjónustur:
+
+Http kóðar ekki útfærðir.
+
+en þjónustur útfærðar
+
+get skilar fyrir gefin gildi:
+
+/departments : Lista af deildum
+
+/departments/:deild  : alla áfanga innan ákveðinar deildar
+
+/departments/:deild/:afangi : ákveðinn áfanga innan deildar ef hann er í deildinni.
+
+patch framkvæmir fyrir gefin gildi:
+
+/departments/:deild : uppfærslu á gefinni deild fyrir gildi í body
+
+/departments/:deild/:afangi : uppfærslu á gefnum áfanga fyrir gildi í body
+
+create og delete virka fyrir gefnar slóðir einnig.
+
+### gögn og gagnagrunnur
+
+gagnagrunnur er settur upp á umbeðinn hátt með viðeigandi schema skjali, einnig var skrifað setup handrit til að setja gögn úr gefnu json skjali og csv skjölum inn í gagnagrunninn.
+
+### Typescript
+
+verkefni skrifað í typescript.
+
+Öll funktion týpuð og týpur skilgreindar.
+
+### tæki og tól
+
+eslint sett upp með typescript stuðningi. Jest sett upp með typescript stuðningi en lætur illa þegar að import skrár eru látnar enda á '.js' ekki ''. Próf skrifuð fyrir gagnagrunnsaðferðir, en ég gat ekki fundið út úr því að setja upp jest prófanir fyrir grunn í keyrslu.
+
+verkefni er í hýsingu á render.
+
+(http://afangarogdeildir.render.com)
+
+
 # Vefforritun 2, 2023, verkefni 3: kennsluskráar vefþjónustur
 
 Verkefnið er framhald af verkefni 1 og snýst um að útbúa vefþjónustur ofan á „okkar eigin kennsluskrá“.
