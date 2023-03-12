@@ -1,6 +1,5 @@
 import { QueryResult } from "pg";
 import slugify from "slugify";
-import { isNullishCoalesce } from "typescript";
 import {conditionalUpdate,deleteById,findBySlug, insertCourse, query} from "./db.js";
 
 export type importAfangi = {

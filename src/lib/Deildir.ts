@@ -1,7 +1,6 @@
 import slugify from 'slugify';
 import { QueryResult } from "pg";
 import { conditionalUpdate, findBySlug, insertDeild, query } from '../lib/db.js';
-
 /*
 {
     "title": "Hagfræðideild",
@@ -26,6 +25,7 @@ export type Deild = {
     description: string,
     created:Date,
     updated:Date};
+
 export function importDeildToDeild(input: unknown):Omit<Deild,'id'>|null{
   const potentialDeild = input as Partial<importDeild> | null;
   if(!potentialDeild
