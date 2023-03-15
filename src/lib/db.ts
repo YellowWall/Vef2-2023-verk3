@@ -86,7 +86,7 @@ export async function conditionalUpdate(
   }
   const updates = update.join(',')
   const q = `update ${table}
-    set ${updates},updated= ${new Date()} where id = $1 returning *; `;
+    set ${updates},updated= CURRENT_TIMESTAMP where id = $1 returning *; `;
   const result = await query(q,[id]);
   console.error(result)
   if(!result||result.rowCount==0){
