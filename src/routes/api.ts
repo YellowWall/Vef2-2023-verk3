@@ -29,7 +29,7 @@ export async function deildarAfangar(req: Request,res: Response,next: NextFuncti
 }
 
 async function makeDeild(req: Request, res: Response, next: NextFunction){
-  const {title,description} = await req.body;
+  const {title,description} =  req.body;
   const insert: Omit<Deild,'id'>={
     title:title,
     slug:slugify(title).toLowerCase(),
@@ -46,7 +46,7 @@ async function makeDeild(req: Request, res: Response, next: NextFunction){
 
 async function makeAfangi(req:Request,res:Response,next:NextFunction){
   const {slug} = req.params;
-  const result = await createAfangi(await req.body,slug);
+  const result = await createAfangi( req.body,slug);
   if(!result){
     return next();
   }
@@ -75,7 +75,7 @@ async function patchAfangi(req:Request,res:Response,next:NextFunction){
   if(!exists){
     return res.status(400);
   }
-  const result = await updateAfangi(await req.body,deild,slug)
+  const result = await updateAfangi(req.body,deild,slug)
   if(!result){
     return res.status(400);
   }
