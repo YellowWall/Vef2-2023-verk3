@@ -105,7 +105,7 @@ router.get('/departments/:deild/:slug',showAfangi)
 router.patch('/departments/:slug',patchDeild);
 router.patch('/departments/:deild/:slug',patchAfangi)
 router.post('/departments/:slug',makeAfangi)
-router.post('/departments/',makeDeild)
+router.post('/departments',makeDeild)
 router.delete('/departments/:slug',deldeild);
 router.delete('/department/:deild/:slug',delAfangi)
 
