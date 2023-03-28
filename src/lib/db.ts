@@ -136,7 +136,7 @@ export async function insertDeild(deild: Omit<Deild,'id'>):Promise<QueryResult|n
   const result = await query(`
   insert into deildir(title,slug,description)
   values($1,$2,$3)
-  returning title, slug;`,[title,slug,description]);
+  returning *;`,[title,slug,description]);
   if(!result){
     return null;
   }

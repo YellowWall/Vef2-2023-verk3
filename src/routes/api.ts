@@ -41,7 +41,7 @@ async function makeDeild(req: Request, res: Response, next: NextFunction){
   if(!result){
     return next();
   }
-  return res.status(200).json({title,slug,description});
+  return res.status(200).json(result);
 }
 
 async function makeAfangi(req:Request,res:Response,next:NextFunction){
