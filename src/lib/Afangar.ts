@@ -29,7 +29,7 @@ export type Afangi = {
     einingar: number,
     kennslumisseri: string,
     namsstig: string,
-    url: string,
+    url?: string,
     created:Date,
     updated:Date,};
 
@@ -50,7 +50,7 @@ export function importAfangiToAfangi(input:unknown,deild:number):Omit<Afangi,'id
     ||!potentialAfangi.namsnum
     ||!potentialAfangi.kennslumisseri
     ||!potentialAfangi.namsstig
-    ||!potentialAfangi.url){
+    ){
       console.error('importAfanga param vantar')
       return null;
     }
@@ -61,7 +61,7 @@ export function importAfangiToAfangi(input:unknown,deild:number):Omit<Afangi,'id
     namsnum: potentialAfangi.namsnum,
     kennslumisseri:potentialAfangi.kennslumisseri,
     namsstig:potentialAfangi.namsstig,
-    url: potentialAfangi.url,
+    url: potentialAfangi.url? potentialAfangi.url:undefined,
     deild: deild,
     created: new Date(),
     updated: new Date(),
@@ -83,12 +83,10 @@ export function afangiMapper(input: unknown): Afangi | null {
     if(!potentialAfangi
         ||!potentialAfangi.id
         ||!potentialAfangi.title
-        ||!potentialAfangi.slug
         ||!potentialAfangi.einingar
         ||!potentialAfangi.namsnum
         ||!potentialAfangi.kennslumisseri
         ||!potentialAfangi.namsstig
-        ||!potentialAfangi.url
         ||!potentialAfangi.deild
         ||!potentialAfangi.created
         ||!potentialAfangi.updated){
@@ -98,12 +96,12 @@ export function afangiMapper(input: unknown): Afangi | null {
     const afangi: Afangi={
         id: potentialAfangi.id,
         title: potentialAfangi.title,
-        slug: potentialAfangi.slug,
+        slug: slugify(potentialAfangi.title).toLowerCase(),
         einingar: potentialAfangi.einingar,
         namsnum: potentialAfangi.namsnum,
         kennslumisseri:potentialAfangi.kennslumisseri,
         namsstig:potentialAfangi.namsstig,
-        url: potentialAfangi.url,
+        url: potentialAfangi.url? potentialAfangi.url:undefined,
         deild:potentialAfangi.deild,
         created: new Date(potentialAfangi.created),
         updated: new Date(potentialAfangi.updated),
@@ -158,9 +156,8 @@ export async function updateAfangi(updates:unknown, deild: string,slug:string):P
   }if(update.title){
     keys.push('title');
     vals.push(update.title);
-  }if(update.slug){
     keys.push('slug');
-    vals.push(slugify(update.slug).toLowerCase());
+    vals.push(slugify(update.title).toLowerCase());
   }if(update.namsstig){
     keys.push('namsstig');
     vals.push(update.namsstig)

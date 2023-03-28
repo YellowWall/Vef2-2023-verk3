@@ -2,7 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import { findBySlug,deleteBySlug, query } from '../lib/db.js';
 import{Deild,createDeild, mapDbDeildirToDeildir, updateDeild} from '../lib/Deildir.js';
 import { createAfangi, deleteAfangi, mapDbAfangarToAfangar, mapDbAfangiToAfangi, updateAfangi } from '../lib/Afangar.js';
-
+import slugify from 'slugify';
 export const router = express.Router();
 
 export async function deildaIndex(req: Request, res: Response, next: NextFunction){
@@ -29,11 +29,11 @@ export async function deildarAfangar(req: Request,res: Response,next: NextFuncti
 }
 
 async function makeDeild(req: Request, res: Response, next: NextFunction){
-  const {title,slug,description} = req.body;
+  const {title,description} = req.body;
   const insert: Omit<Deild,'id'>={
     title:title,
-    slug:slug,
-    description:description,
+    slug:slugify(title).toLowerCase(),
+    description:description? description:null,
     created:new Date(),
     updated: new Date()
   } 

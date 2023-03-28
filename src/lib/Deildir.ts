@@ -106,14 +106,12 @@ export async function updateDeild(input:string,data:unknown):Promise<Deild|null>
     if(potentialDeild.title){
       updates.push('title')
       values.push(potentialDeild.title)
+      updates.push('slug');
+      values.push(slugify(potentialDeild.title).toLowerCase())
     }
     if(potentialDeild.description){
       updates.push('description')
       values.push(potentialDeild.description)
-    }
-    if(potentialDeild.slug){
-      updates.push('slug')
-      values.push(slugify(potentialDeild.slug).toLowerCase())
     }
     const result = await conditionalUpdate('deildir',id,updates,values)
     if(!result){

@@ -58,11 +58,15 @@ export async function dropSchema(dropFile = DROP_SCHEMA_FILE) {
 }
 export async function insertCourse(course: Omit<Afangi,'id'>): Promise<QueryResult|null>{
   const {title,slug, namsnum, einingar,kennslumisseri,namsstig,url,deild} = course;
+  const urlexc = url? ',url':'';
+  const urlnum = url? ',$8':'';
+  const vals = [title,slug,namsnum,einingar,kennslumisseri,namsstig,deild]
+  url? vals.push(url): null;
   const result = await query(`insert into afangar
-  (title,slug,namsnum,einingar,kennslumisseri,namsstig,url,deild)
+  (title,slug,namsnum,einingar,kennslumisseri,namsstig,deild${urlexc})
       values
-      ($1,$2,$3,$4,$5,$6,$7,$8)
-      returning *;`,[title,slug,namsnum,einingar,kennslumisseri,namsstig,url,deild]);
+      ($1,$2,$3,$4,$5,$6,$7${urlnum})
+      returning *;`,vals);
   return result;
 }
 export async function conditionalUpdate(
