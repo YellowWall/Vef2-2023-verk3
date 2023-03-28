@@ -11,8 +11,7 @@ export async function deildaIndex(req: Request, res: Response, next: NextFunctio
   if(!displayer){
     return next()
   }
-  res.status(200)
-  res.json(displayer);
+  return res.status(200).json(displayer);
 }
 export async function deildarAfangar(req: Request,res: Response,next: NextFunction){
   const {slug} = req.params;
@@ -26,8 +25,7 @@ export async function deildarAfangar(req: Request,res: Response,next: NextFuncti
   if(!afangar){
     return next()
   }
-  res.status(200)
-  res.json(afangar)
+  return res.status(200).json(afangar)
 }
 
 async function makeDeild(req: Request, res: Response, next: NextFunction){
@@ -43,8 +41,7 @@ async function makeDeild(req: Request, res: Response, next: NextFunction){
   if(!result){
     return next();
   }
-  res.status(200)
-  res.json({title,slug,description});
+  return res.status(200).json({title,slug,description});
 }
 
 async function makeAfangi(req:Request,res:Response,next:NextFunction){
@@ -53,8 +50,7 @@ async function makeAfangi(req:Request,res:Response,next:NextFunction){
   if(!result){
     return next();
   }
-  res.status(200)
-  res.json(result);
+  return res.status(200).json(result);
 }
 async function deldeild(req:Request,res:Response,next:NextFunction){
   const {slug} = req.params;
@@ -62,8 +58,7 @@ async function deldeild(req:Request,res:Response,next:NextFunction){
   if(!result){
     return next();
   }
-  res.status(200)
-  res.json(result);
+  return res.status(200).json(result);
 }
 async function patchDeild(req:Request,res:Response,next:NextFunction){
   const {slug} = req.params;
@@ -71,32 +66,28 @@ async function patchDeild(req:Request,res:Response,next:NextFunction){
   if(!result){
     return next();
   }
-  res.status(200)
-  res.json(result);
+  return res.status(200).json(result);
 }
 async function patchAfangi(req:Request,res:Response,next:NextFunction){
   const {slug,deild} = req.params
   const id = await findBySlug(`deildir`,deild)
   const exists = await query(`select * from afangar where slug=$1 and deild =$2; `,[slug,id])
   if(!exists){
-    res.status(400)
-    return next()
+    return res.status(400);
   }
   const result = await updateAfangi(req.body,deild,slug)
   if(!result){
-    return next();
+    return res.status(400);
   }
-  res.status(200)
-  res.json(result)
+  return res.status(200).json(result);
 }
 async function delAfangi(req:Request,res:Response,next:NextFunction){
   const {slug,deild} = req.params
   const result = await deleteAfangi(deild,slug)
   if(!result){
-    return next()
+    return res.status(400)
   }
-  res.status(200)
-  res.json(result)
+  return res.status(200).json(result)
 }
 async function showAfangi(req:Request,res:Response,next:NextFunction){
   const {slug,deild} = req.params
@@ -104,11 +95,9 @@ async function showAfangi(req:Request,res:Response,next:NextFunction){
   const dbAfangi = await query(`select * from afangar where deild=$1 and slug=$2;`,[deildID,slug])
   const result = mapDbAfangiToAfangi(dbAfangi?.rows[0])
   if(!result){
-    res.status(404)
-    return next()
+    return res.status(400);
   }
-  res.status(200)
-  res.json(result)
+  return res.status(200).json(result)
 }
 router.get('/departments',deildaIndex);
 router.get('/departments/:slug',deildarAfangar);
